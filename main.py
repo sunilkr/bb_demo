@@ -1,39 +1,21 @@
 import time
+import logging
 
-path_tmpl = "/sys/class/leds/beaglebone:green:{0}/brightness"
+from led import LED_NAMES, LED
+from server import Server
 
-def blink_led(name, count=2, delay=0.5):
-    led_file = path_tmpl.format(name)
-    last_b = 0
-    try:
-        with open(led_file, "r") as lfh:
-            last_b = lfh.read()
-    except Exception as e:
-        print("Error reading file {0}, err: {1}".format(led_file, e))
-        return -1
-
-    for i in range(count):
-        try:
-            with open(led_file, "w") as lfh:
-                lfh.write("1")
-            #print("LED should be ON")
-            time.sleep(delay)
-            with open(led_file, "w") as lfh:
-                lfh.write("0")
-            #time.sleep(1)
-            #print("LED should be OFF")
-        except Exception as e:
-            print("Error writing file {0}, err: {1}".format(led_file, e))
-            return -2
-        time.sleep(delay)
-
-    return 0
-    #time.sleep(delay)
-
+logging.basicConfig(level=logging.DEBUG)
 
 if __name__ == "__main__":
+    print("Initializing...")
+    led_usr1 = LED(LED_NAMES.USR1)
     print("blinking 'usr1'")
-    blink_led("usr1")
-    time.sleep(1)
+    s1 = led_usr1.blink()
+    led_usr2 = LED(LED_NAMES.USR2)
     print("blinking 'usr2'")
-    blink_led("usr2")
+    s2 = led_usr2.blink()
+    if not (s1 and s2):
+        print("Initialization failed")
+        exit(-1)
+    Server.start_all("config.json")
+    
